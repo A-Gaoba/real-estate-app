@@ -1,93 +1,258 @@
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
-import FeaturedProperties from "@/components/featured-properties"
-import HeroSection from "@/components/hero-section"
-import SearchFilters from "@/components/search-filters"
+import { ArrowRight, HomeIcon, Search, User, Building, MapPin, Star } from "lucide-react"
+import { PropertyCard } from "@/components/PropertyCard"
+import { SearchBar } from "@/components/SearchBar"
+import { getFeaturedProperties } from "@/lib/properties"
 
-export default function Home() {
+export default async function Home() {
+  // Fetch featured properties
+  const featuredProperties = await getFeaturedProperties(6)
+
   return (
-    <div className="flex flex-col gap-12">
-      <HeroSection />
-
-      <section className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h2 className="text-3xl font-bold mb-6">Find Your Dream Property</h2>
-          <SearchFilters />
-        </div>
-
-        <div className="mb-12">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-3xl font-bold">Featured Properties</h2>
-            <Button variant="outline" asChild>
-              <a href="/properties">View All</a>
-            </Button>
+    <div className="space-y-24">
+      {/* Enhanced Hero Section with Gradient Background */}
+      <section className="relative py-20 md:py-32 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-background" />
+        <div className="container relative px-4 md:px-6">
+          <div className="flex flex-col items-center text-center space-y-6 mb-16">
+            <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/60">
+              Find Your Dream Home Today
+            </h1>
+            <p className="max-w-[600px] text-muted-foreground md:text-xl text-lg">
+              Discover the perfect property with our comprehensive real estate platform. Browse listings, connect with
+              agents, and find your ideal home.
+            </p>
           </div>
-          <FeaturedProperties />
+
+          <div className="max-w-3xl mx-auto">
+            <SearchBar />
+          </div>
         </div>
+      </section>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-          <Card className="p-6 flex flex-col items-center text-center">
-            <div className="bg-primary/10 p-4 rounded-full mb-4">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="text-primary h-8 w-8"
-              >
-                <path d="m21 8-2 2-1.5-3.7a1 1 0 0 0-1.3-.5L9 9 5 8l3 4-1.5 4.7a1 1 0 0 0 .7 1.3L12 19l2 3 1-4.7a1 1 0 0 1 .7-.6L21 16l-2-3 2-5Z" />
-              </svg>
+      {/* Featured Properties Section with Enhanced Header */}
+      <section className="py-16">
+        <div className="container px-4 md:px-6">
+          <div className="flex flex-col md:flex-row justify-between items-center mb-12">
+            <div className="flex items-center gap-3">
+              <Star className="h-8 w-8 text-primary" />
+              <h2 className="text-3xl font-bold tracking-tighter">Featured Properties</h2>
             </div>
-            <h3 className="text-xl font-bold mb-2">Premium Listings</h3>
-            <p className="text-muted-foreground">Exclusive properties handpicked by our expert agents</p>
-          </Card>
+            <Link href="/properties">
+              <Button variant="outline" className="gap-2 group">
+                View All Properties
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+              </Button>
+            </Link>
+          </div>
 
-          <Card className="p-6 flex flex-col items-center text-center">
-            <div className="bg-primary/10 p-4 rounded-full mb-4">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="text-primary h-8 w-8"
-              >
-                <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
-              </svg>
-            </div>
-            <h3 className="text-xl font-bold mb-2">Trusted Agents</h3>
-            <p className="text-muted-foreground">Work with the best real estate professionals in the industry</p>
-          </Card>
+          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+            {featuredProperties.length > 0
+              ? featuredProperties.map((property) => (
+                  <PropertyCard
+                    key={property.id}
+                    property={{
+                      id: property.id,
+                      title: property.title,
+                      price: property.price,
+                      address: property.address,
+                      city: property.city,
+                      state: property.state,
+                      images: property.images,
+                      features: property.features,
+                    }}
+                    featured={true}
+                  />
+                ))
+              : Array.from({ length: 3 }).map((_, i) => (
+                  <PropertyCard
+                    key={i}
+                    property={{
+                      id: `dummy-${i}`,
+                      title: "Beautiful Property",
+                      price: 350000,
+                      address: "123 Main St",
+                      city: "Anytown",
+                      state: "CA",
+                      images: ["/placeholder.svg?height=300&width=400"],
+                      features: ["3 Bedrooms", "2 Bathrooms", "1500 sqft"],
+                    }}
+                    featured={true}
+                  />
+                ))}
+          </div>
+        </div>
+      </section>
 
-          <Card className="p-6 flex flex-col items-center text-center">
-            <div className="bg-primary/10 p-4 rounded-full mb-4">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="text-primary h-8 w-8"
-              >
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" />
-              </svg>
+      {/* Enhanced Property Types Section */}
+      <section className="py-20 bg-gradient-to-b from-muted/50 to-background">
+        <div className="container px-4 md:px-6">
+          <h2 className="text-3xl font-bold tracking-tighter text-center mb-12">Browse by Property Type</h2>
+
+          <div className="grid gap-8 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+            <Link href="/search?type=HOUSE">
+              <div className="group bg-card hover:bg-accent transition-all duration-300 rounded-xl p-8 text-center shadow-sm border hover:shadow-md">
+                <HomeIcon className="h-12 w-12 mx-auto mb-4 text-primary group-hover:scale-110 transition-transform" />
+                <h3 className="text-xl font-bold">Houses</h3>
+                <p className="text-muted-foreground mt-2">Find your perfect family home</p>
+              </div>
+            </Link>
+            <Link href="/search?type=APARTMENT">
+              <div className="group bg-card hover:bg-accent transition-all duration-300 rounded-xl p-8 text-center shadow-sm border hover:shadow-md">
+                <Building className="h-12 w-12 mx-auto mb-4 text-primary group-hover:scale-110 transition-transform" />
+                <h3 className="text-xl font-bold">Apartments</h3>
+                <p className="text-muted-foreground mt-2">Modern urban living spaces</p>
+              </div>
+            </Link>
+            <Link href="/search?type=CONDO">
+              <div className="group bg-card hover:bg-accent transition-all duration-300 rounded-xl p-8 text-center shadow-sm border hover:shadow-md">
+                <Building className="h-12 w-12 mx-auto mb-4 text-primary group-hover:scale-110 transition-transform" />
+                <h3 className="text-xl font-bold">Condos</h3>
+                <p className="text-muted-foreground mt-2">Luxury with amenities</p>
+              </div>
+            </Link>
+            <Link href="/search?type=TOWNHOUSE">
+              <div className="group bg-card hover:bg-accent transition-all duration-300 rounded-xl p-8 text-center shadow-sm border hover:shadow-md">
+                <HomeIcon className="h-12 w-12 mx-auto mb-4 text-primary group-hover:scale-110 transition-transform" />
+                <h3 className="text-xl font-bold">Townhouses</h3>
+                <p className="text-muted-foreground mt-2">Urban-suburban blend</p>
+              </div>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Enhanced Cities Section */}
+      <section className="py-20">
+        <div className="container px-4 md:px-6">
+          <h2 className="text-3xl font-bold tracking-tighter text-center mb-12">Popular Cities</h2>
+
+          <div className="grid gap-8 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+            <Link href="/search?location=New York">
+              <div className="group relative h-72 overflow-hidden rounded-xl">
+                <img
+                  src="/placeholder.svg?height=300&width=400"
+                  alt="New York"
+                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
+                <div className="absolute bottom-6 left-6 flex items-center">
+                  <MapPin className="h-5 w-5 text-white mr-2" />
+                  <h3 className="text-xl font-bold text-white">New York</h3>
+                </div>
+              </div>
+            </Link>
+            <Link href="/search?location=Los Angeles">
+              <div className="group relative h-72 overflow-hidden rounded-xl">
+                <img
+                  src="/placeholder.svg?height=300&width=400"
+                  alt="Los Angeles"
+                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
+                <div className="absolute bottom-6 left-6 flex items-center">
+                  <MapPin className="h-5 w-5 text-white mr-2" />
+                  <h3 className="text-xl font-bold text-white">Los Angeles</h3>
+                </div>
+              </div>
+            </Link>
+            <Link href="/search?location=Miami">
+              <div className="group relative h-72 overflow-hidden rounded-xl">
+                <img
+                  src="/placeholder.svg?height=300&width=400"
+                  alt="Miami"
+                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
+                <div className="absolute bottom-6 left-6 flex items-center">
+                  <MapPin className="h-5 w-5 text-white mr-2" />
+                  <h3 className="text-xl font-bold text-white">Miami</h3>
+                </div>
+              </div>
+            </Link>
+            <Link href="/search?location=Chicago">
+              <div className="group relative h-72 overflow-hidden rounded-xl">
+                <img
+                  src="/placeholder.svg?height=300&width=400"
+                  alt="Chicago"
+                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
+                <div className="absolute bottom-6 left-6 flex items-center">
+                  <MapPin className="h-5 w-5 text-white mr-2" />
+                  <h3 className="text-xl font-bold text-white">Chicago</h3>
+                </div>
+              </div>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Enhanced Features Section */}
+      <section className="py-20 md:py-32 bg-gradient-to-b from-background to-muted/50">
+        <div className="container px-4 md:px-6">
+          <div className="flex flex-col items-center justify-center space-y-4 text-center mb-16">
+            <div className="space-y-3">
+              <h2 className="text-3xl font-bold tracking-tighter md:text-4xl">Why Choose Our Platform</h2>
+              <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+                We offer a comprehensive suite of tools and services to make your property journey seamless.
+              </p>
             </div>
-            <h3 className="text-xl font-bold mb-2">Secure Transactions</h3>
-            <p className="text-muted-foreground">Safe and transparent property dealings from start to finish</p>
-          </Card>
+          </div>
+          <div className="mx-auto grid max-w-5xl grid-cols-1 gap-8 md:grid-cols-3">
+            <div className="group flex flex-col items-center space-y-4 rounded-xl border p-8 shadow-sm hover:shadow-md transition-all duration-300">
+              <div className="rounded-full bg-primary/10 p-4">
+                <HomeIcon className="h-8 w-8 text-primary" />
+              </div>
+              <h3 className="text-xl font-bold">Extensive Listings</h3>
+              <p className="text-muted-foreground text-center">Access thousands of verified property listings across the country</p>
+            </div>
+            <div className="group flex flex-col items-center space-y-4 rounded-xl border p-8 shadow-sm hover:shadow-md transition-all duration-300">
+              <div className="rounded-full bg-primary/10 p-4">
+                <User className="h-8 w-8 text-primary" />
+              </div>
+              <h3 className="text-xl font-bold">Expert Agents</h3>
+              <p className="text-muted-foreground text-center">Connect with experienced real estate professionals</p>
+            </div>
+            <div className="group flex flex-col items-center space-y-4 rounded-xl border p-8 shadow-sm hover:shadow-md transition-all duration-300">
+              <div className="rounded-full bg-primary/10 p-4">
+                <Search className="h-8 w-8 text-primary" />
+              </div>
+              <h3 className="text-xl font-bold">Smart Search</h3>
+              <p className="text-muted-foreground text-center">Find your perfect property with advanced search filters</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-12 bg-primary text-primary-foreground">
+        <div className="container px-4 md:px-6">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+            <div className="space-y-4 text-center md:text-left">
+              <h2 className="text-3xl font-bold tracking-tighter md:text-4xl">Ready to Find Your Dream Home?</h2>
+              <p className="max-w-[600px] text-primary-foreground/90">
+                Start your property search today and let us help you find the perfect place to call home.
+              </p>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Link href="/properties">
+                <Button variant="secondary" size="lg">
+                  Browse Properties
+                </Button>
+              </Link>
+              <Link href="/contact">
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="bg-transparent text-primary-foreground border-primary-foreground hover:bg-primary-foreground/10"
+                >
+                  Contact an Agent
+                </Button>
+              </Link>
+            </div>
+          </div>
         </div>
       </section>
     </div>

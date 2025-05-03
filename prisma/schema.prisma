@@ -11,19 +11,21 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(auto()) @map("_id") @db.ObjectId
-  clerkId       String    @unique
-  email         String    @unique
-  username      String?
-  role          Role      @default(USER)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  properties    Property[] @relation("CreatedBy")
-  savedProperties Property[] @relation("SavedBy", fields: [savedPropertyIds], references: [id])
-  savedPropertyIds String[] @db.ObjectId
-  bookingRequests BookingRequest[] @relation("RequestedBy")
-  receivedMessages Message[] @relation("ReceivedBy")
-  sentMessages    Message[] @relation("SentBy")
+  id              String          @id @default(auto()) @map("_id") @db.ObjectId
+  clerkId         String          @unique
+  email           String          @unique
+  username        String?
+  role            Role            @default(USER)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  properties      Property[]      @relation("CreatedBy")
+  savedProperties Property[]      @relation("SavedBy", fields: [savedPropertyIds], references: [id])
+  savedPropertyIds String[]       @db.ObjectId @default([])
+  inquiries       Inquiry[]
+  bookingRequests BookingRequest[]
+  sentMessages    Message[]       @relation("SentMessages")
+  receivedMessages Message[]      @relation("ReceivedMessages")
+  pageViews       Int             @default(0)
 }
 
 enum Role {
@@ -33,35 +35,39 @@ enum Role {
 }
 
 model Property {
-  id            String    @id @default(auto()) @map("_id") @db.ObjectId
-  title         String
-  description   String
-  price         Float
-  address       String
-  city          String
-  state         String
-  country       String
-  zipCode       String
-  images        String[]
-  features      String[]
-  type          PropertyType
-  status        PropertyStatus
-  bedrooms      Int
-  bathrooms     Float
-  area          Float
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  createdBy     User      @relation("CreatedBy", fields: [createdById], references: [id])
-  createdById   String    @db.ObjectId
-  savedBy       User[]    @relation("SavedBy", fields: [savedByIds], references: [id])
-  savedByIds    String[]  @db.ObjectId
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  description String
+  price       Float
+  address     String
+  city        String
+  state       String
+  country     String
+  zip         String
+  images      String[]
+  features    String[]
+  type        PropertyType
+  status      PropertyStatus @default(AVAILABLE)
+  createdBy   User      @relation("CreatedBy", fields: [userId], references: [id])
+  userId      String    @db.ObjectId
+  savedBy     User[]    @relation("SavedBy", fields: [savedByIds], references: [id])
+  savedByIds  String[]  @db.ObjectId @default([])
+  inquiries   Inquiry[]
   bookingRequests BookingRequest[]
-  views         Int       @default(0)
+  messages    Message[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  isFeatured  Boolean   @default(false)
+  bedrooms    Int?
+  bathrooms   Float?
+  sqft        Int?
+  isApproved  Boolean   @default(true)
+  views       Int       @default(0)
 }
 
 enum PropertyType {
-  APARTMENT
   HOUSE
+  APARTMENT
   CONDO
   TOWNHOUSE
   LAND
@@ -69,22 +75,25 @@ enum PropertyType {
 }
 
 enum PropertyStatus {
-  FOR_SALE
-  FOR_RENT
+  AVAILABLE
   SOLD
+  PENDING
   RENTED
 }
 
-model BookingRequest {
-  id            String    @id @default(auto()) @map("_id") @db.ObjectId
-  message       String
-  status        BookingStatus @default(PENDING)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  property      Property  @relation(fields: [propertyId], references: [id])
-  propertyId    String    @db.ObjectId
-  user          User      @relation("RequestedBy", fields: [userId], references: [id])
-  userId        String    @db.ObjectId
+model Inquiry {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  email       String
+  phone       String?
+  message     String
+  user        User     @relation(fields: [userId], references: [id])
+  userId      String   @db.ObjectId
+  property    Property @relation(fields: [propertyId], references: [id])
+  propertyId  String   @db.ObjectId
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  isRead      Boolean  @default(false)
 }
 
 enum BookingStatus {
@@ -94,13 +103,30 @@ enum BookingStatus {
   CANCELLED
 }
 
+model BookingRequest {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  message     String
+  status      BookingStatus @default(PENDING)
+  user        User     @relation(fields: [userId], references: [id])
+  userId      String   @db.ObjectId
+  property    Property @relation(fields: [propertyId], references: [id])
+  propertyId  String   @db.ObjectId
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
 model Message {
-  id            String    @id @default(auto()) @map("_id") @db.ObjectId
-  content       String
-  createdAt     DateTime  @default(now())
-  from          User      @relation("SentBy", fields: [fromId], references: [id])
-  fromId        String    @db.ObjectId
-  to            User      @relation("ReceivedBy", fields: [toId], references: [id])
-  toId          String    @db.ObjectId
-  read          Boolean   @default(false)
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  content     String
+  fromUser    User     @relation("SentMessages", fields: [fromUserId], references: [id])
+  fromUserId  String   @db.ObjectId
+  toUser      User     @relation("ReceivedMessages", fields: [toUserId], references: [id])
+  toUserId    String   @db.ObjectId
+  property    Property @relation(fields: [propertyId], references: [id])
+  propertyId  String   @db.ObjectId
+  createdAt   DateTime @default(now())
+  isRead      Boolean  @default(false)
+  parentId    String?  @db.ObjectId
+  parent      Message? @relation("ThreadMessages", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  replies     Message[] @relation("ThreadMessages")
 }

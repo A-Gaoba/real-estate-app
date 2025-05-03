@@ -12,7 +12,7 @@ export async function POST(req: Request) {
 
   // If there are no headers, error out
   if (!svix_id || !svix_timestamp || !svix_signature) {
-    return new Response("Error: Missing svix headers", {
+    return new Response("Error occurred -- no svix headers", {
       status: 400,
     })
   }
@@ -35,7 +35,7 @@ export async function POST(req: Request) {
     }) as WebhookEvent
   } catch (err) {
     console.error("Error verifying webhook:", err)
-    return new Response("Error verifying webhook", {
+    return new Response("Error occurred", {
       status: 400,
     })
   }
@@ -43,88 +43,32 @@ export async function POST(req: Request) {
   // Handle the webhook
   const eventType = evt.type
 
-  if (eventType === "user.created") {
+  if (eventType === "user.created" || eventType === "user.updated") {
     const { id, email_addresses, username, first_name, last_name } = evt.data
 
-    // Create a new user in the database
-    const primaryEmail = email_addresses?.[0]?.email_address
-
-    if (!primaryEmail) {
-      return new Response("Error: User has no email address", {
-        status: 400,
-      })
-    }
-
-    try {
-      await prisma.user.create({
-        data: {
-          clerkId: id,
-          email: primaryEmail,
-          username: username || undefined,
-          role: "USER", // Default role
-        },
-      })
-
-      return new Response("User created", { status: 201 })
-    } catch (error) {
-      console.error("Error creating user:", error)
-      return new Response("Error creating user", { status: 500 })
-    }
-  }
-
-  if (eventType === "user.updated") {
-    const { id, email_addresses, username } = evt.data
-
-    // Update the user in the database
-    const primaryEmail = email_addresses?.[0]?.email_address
-
-    if (!primaryEmail) {
-      return new Response("Error: User has no email address", {
-        status: 400,
-      })
-    }
-
-    try {
-      await prisma.user.update({
-        where: { clerkId: id },
-        data: {
-          email: primaryEmail,
-          username: username || undefined,
-        },
-      })
-
-      return new Response("User updated", { status: 200 })
-    } catch (error) {
-      console.error("Error updating user:", error)
-      return new Response("Error updating user", { status: 500 })
-    }
+    // Upsert the user in our database
+    await prisma.user.upsert({
+      where: { clerkId: id as string },
+      update: {
+        email: email_addresses[0].email_address,
+        username: username || `${first_name}${last_name}`,
+      },
+      create: {
+        clerkId: id as string,
+        email: email_addresses[0].email_address,
+        username: username || `${first_name}${last_name}`,
+      },
+    })
   }
 
   if (eventType === "user.deleted") {
     const { id } = evt.data
 
-    try {
-      // Find the user first
-      const user = await prisma.user.findUnique({
-        where: { clerkId: id },
-      })
-
-      if (!user) {
-        return new Response("User not found", { status: 404 })
-      }
-
-      // Delete the user from the database
-      await prisma.user.delete({
-        where: { clerkId: id },
-      })
-
-      return new Response("User deleted", { status: 200 })
-    } catch (error) {
-      console.error("Error deleting user:", error)
-      return new Response("Error deleting user", { status: 500 })
-    }
+    // Delete the user from our database
+    await prisma.user.delete({
+      where: { clerkId: id as string },
+    })
   }
 
-  // Return a 200 response for any other event types
   return new Response("Webhook received", { status: 200 })
 }
