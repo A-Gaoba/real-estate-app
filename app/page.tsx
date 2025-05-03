@@ -248,7 +248,7 @@ export default async function Home() {
                   size="lg"
                   className="bg-transparent text-primary-foreground border-primary-foreground hover:bg-primary-foreground/10"
                 >
-                  Contact an Agent
+                  Contact Agent
                 </Button>
               </Link>
             </div>
